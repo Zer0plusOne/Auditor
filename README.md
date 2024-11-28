@@ -22,7 +22,7 @@ WebAuditor is a Python-based tool designed to perform a comprehensive security a
 
 2. Install the required dependencies:
     ```sh
-    pip install -r requirements.txt
+    bash requirements.sh
     ```
 
 ## Usage
@@ -30,7 +30,7 @@ WebAuditor is a Python-based tool designed to perform a comprehensive security a
 To run a full audit on a target website, use the following command:
 ```sh
 python main.py <URL>
-\\\
+```
 Replace `<URL>` with the target website URL.
 
 ## Example
@@ -41,7 +41,7 @@ python main.py https://example.com
 
 ## Output
 
-The tool generates a detailed report of the audit and saves it to \`audit_report.txt\`.
+The tool generates a detailed report of the audit and saves it to \`audit_report.txt\` in the current directory.
 
 ## Dependencies
 
