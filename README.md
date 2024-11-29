@@ -8,7 +8,7 @@ WebAuditor is a Python-based tool designed to perform a comprehensive security a
 - **Security Headers Analysis**: Analyzes the security headers of the target website.
 - **Open Ports and Service Versions Detection**: Scans for open ports and detects the versions of services running on those ports.
 - **WHOIS Information Retrieval**: Retrieves WHOIS information for the target domain.
-- **Common Vulnerabilities Check**: Checks for common vulnerabilities (implementation required).
+- **Common Vulnerabilities Check**: Checks for common vulnerabilities.
 - **Sensitive Files Crawling**: Crawls the website for potentially sensitive files.
 - **Report Generation**: Generates a detailed report of the audit.
 
