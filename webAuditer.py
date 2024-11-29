@@ -9,6 +9,7 @@ import whois
 from datetime import datetime
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+from Wappalyzer import WebPage, Wappalyzer
 import re
 
 class WebAuditor:
@@ -24,6 +25,7 @@ class WebAuditor:
         print(f"[+] Iniciando auditoría completa de {self.target_url}")
         self.check_ssl()
         self.check_headers()
+        self.detect_technologies()  # Llama al nuevo método
         self.check_open_ports_and_versions()
         self.get_whois_info()
         self.check_common_vulnerabilities()
@@ -61,6 +63,49 @@ class WebAuditor:
             self.results['security_headers'] = security_headers
         except Exception as e:
             self.results['security_headers'] = f"Error: {str(e)}"
+    
+    def check_cve_for_technology(self, technology):
+        print(f"[*] Buscando CVEs para {technology}...")
+        try:
+            cve_api_url = f"https://services.nvd.nist.gov/rest/json/cves/1.0?keyword={technology}&resultsPerPage=5"
+            response = requests.get(cve_api_url, headers=self.headers)
+
+            if response.status_code == 200:
+                cve_data = response.json()
+                vulnerabilities = cve_data.get("result", {}).get("CVE_Items", [])
+                if vulnerabilities:
+                    self.vulnerable_versions.append({
+                        'technology': technology,
+                        'vulnerabilities': [
+                            {
+                                'id': vuln.get("cve", {}).get("CVE_data_meta", {}).get("ID"),
+                                'description': vuln.get("cve", {}).get("description", {}).get("description_data", [])[0].get("value", "No description")
+                            }
+                            for vuln in vulnerabilities
+                        ]
+                    })
+                else:
+                    print(f"[-] No se encontraron vulnerabilidades para {technology}.")
+            else:
+                print(f"[-] Error al consultar la API de CVE: {response.status_code}")
+        except Exception as e:
+            print(f"[-] Error al buscar CVEs para {technology}: {str(e)}")
+
+    def detect_technologies(self):
+        print("[*] Detectando tecnologías en uso...")
+        try:
+            webpage = WebPage.new_from_url(self.target_url)
+            wappalyzer = Wappalyzer.latest()
+            detected_technologies = wappalyzer.analyze(webpage)
+            self.results['technologies'] = detected_technologies
+
+            print("[+] Tecnologías detectadas:")
+            for tech in detected_technologies:
+                print(f"  - {tech}")
+                self.check_cve_for_technology(tech)
+
+        except Exception as e:
+            self.results['technologies'] = f"Error: {str(e)}"
 
     def check_open_ports_and_versions(self):
         print("[*] Escaneando puertos y detectando versiones...")
@@ -129,24 +174,31 @@ class WebAuditor:
         ========================
         Target: {self.target_url}
         Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+        
         SSL Certificate Information:
         --------------------------
         {self.results.get('ssl', 'No SSL information available')}
+        
         Security Headers:
         ---------------
         {self.results.get('security_headers', 'No header information available')}
-        Open Ports and Detected Services:
-        --------------------------------
-        {self.results.get('open_ports', 'No port information available')}
-        WHOIS Information:
-        ----------------
-        {self.results.get('whois', 'No WHOIS information available')}
-        Potentially Vulnerable Paths:
-        --------------------------
-        {self.results.get('vulnerable_paths', 'No vulnerability information available')}
+        
+        Detected Technologies:
+        ----------------------
+        {self.results.get('technologies', 'No technologies detected')}
+
         Detected Vulnerabilities on Protocol Versions:
         ---------------------------------------------
         {self.vulnerable_versions or 'No known vulnerabilities detected for service versions.'}
+
+        Open Ports and Detected Services:
+        --------------------------------
+        {self.results.get('open_ports', 'No port information available')}
+
+        WHOIS Information:
+        ----------------
+        {self.results.get('whois', 'No WHOIS information available')}
+        
         Found Files:
         -----------
         {self.results.get('found_files', 'No files found')}
@@ -154,6 +206,7 @@ class WebAuditor:
         # Guardar el reporte en un archivo
         with open('audit_report.txt', 'w') as report_file:
             report_file.write(report)
+        print("[+] Reporte generado exitosamente. Ver 'audit_report.txt'.")
 
 def main():
     if len(sys.argv) != 2:
