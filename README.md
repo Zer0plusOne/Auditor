@@ -16,7 +16,7 @@ WebAuditor is a Python-based tool designed to perform a comprehensive security a
 
 1. Clone the repository:
     ```sh
-    git clone https://github.com/yourusername/WebAuditor.git
+    git clone https://github.com/Zer0plusOne/WebAuditor.git
     cd WebAuditor
     ```
 
